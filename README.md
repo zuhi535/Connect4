@@ -52,18 +52,18 @@ org.apache.maven.plugins.maven-checkstyle-plugin - annak érdekében, hogy a pro
 
 - [x] Az alkalmazásunkhoz szükséges VO (Value Object) osztályok létrehozása (ügyelve és figyelembe véve a "best practice"-eket: Object methods overriding, Immutability, stb)
 
-• Az induláskor egy szövegfájlból beolvas egy játékállást, ha nincs meg az input fájl, akkor üres pályáról indulunk
+- [x] Az induláskor egy szövegfájlból beolvas egy játékállást, ha nincs meg az input fájl, akkor üres pályáról indulunk
 
 - [x] Az alkalmazás képes kezdetleges felhasználói interakciókat fogadni
 
-• egy szövegfájlból betölteni egy pályát
+- [x] egy szövegfájlból betölteni egy pályát
 egy szövegfájlba kiĺrni egy pályát
 
 • Például: Játékos nevének bekérése, Játék elindítása, a játéktér kiiratása. Egy lépés fogadása a parancssoron, a lépés vizsgálata abból a szempontból, hogy alkalmazható-e; a lépés alkalmazása és az eredmény kiírása, stb 
 
 • Itt nem határozunk meg kötelező elvárásokat, tetszőleges kezdetleges interakciók elegendőek
 
-• Egység tesztek 80% lefedettséget biztosítanak üzleti logikát tartalmazó osztályokra (tehát például VO osztályokra nem szükséges egységteszteket írni)
+- [ ] Egység tesztek 80% lefedettséget biztosítanak üzleti logikát tartalmazó osztályokra (tehát például VO osztályokra nem szükséges egységteszteket írni)
 
 ## Elvárások a második (14. heti) védésre:
 
