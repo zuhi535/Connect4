@@ -3,47 +3,47 @@ package hu.nye;
 import hu.nye.model.Game;
 import hu.nye.model.Player;
 import hu.nye.model.Board;
+import hu.nye.util.DatabaseManager;  // Importáld a DatabaseManager osztályt
+import hu.nye.util.FileManager;
+import hu.nye.util.InputHandler;
+import hu.nye.util.MoveValidator;
 
+import java.io.IOException;
 import java.util.Random;
 import java.util.Scanner;
 
-/**
- * Main class for starting the Connect4 game.
- */
 public final class App {
 
-    /**
-     * Private constructor to prevent instantiation.
-     */
-    private App() {
-        // This constructor is intentionally empty to prevent instantiation.
-    }
-
-    /**
-     * Main method for starting the Connect4 game.
-     *
-     * @param args the command line arguments (not used)
-     */
     public static void main(final String[] args) {
         Scanner scanner = new Scanner(System.in);
-        Random random = new Random();  // Initialize Random object
+        Random random = new Random();
+        DatabaseManager databaseManager = new DatabaseManager();  // Inicializáld itt
 
-        System.out.println("Welcome to Connect4!");
-        System.out.print("Enter player name: ");
-        String playerName = scanner.nextLine();
+        try {
+            System.out.println("Welcome to Connect4!");
+            System.out.print("Enter player name: ");
+            String playerName = scanner.nextLine();
 
-        Player player = new Player(playerName, 'R');
+            Player player = new Player(playerName, 'R');
+            Board board = new Board();
+            FileManager fileManager = new FileManager();
 
-        // Create a new board object
-        Board board = new Board();
+            try {
+                fileManager.loadBoard(board, "board_input.txt");
+                System.out.println("Board loaded from board_input.txt");
+            } catch (IOException e) {
+                System.out.println("No saved board found, starting with an empty board.");
+            }
 
-        // Pass Scanner and Random to the Game object
-        Game game = new Game(player, board, scanner, random);
+            InputHandler inputHandler = new InputHandler(scanner);
+            MoveValidator moveValidator = new MoveValidator();
 
-        // Load the initial board state from 'board_input.txt'
-        game.loadInitialBoard();
-
-        // Start the game
-        game.start();
+            // Inicializáld a játékot a DatabaseManager-rel
+            Game game = new Game(player, board, inputHandler, moveValidator, fileManager, random, databaseManager);
+            game.start();
+        } finally {
+            // Zárd le a database kapcsolatot
+            databaseManager.close();
+        }
     }
 }
