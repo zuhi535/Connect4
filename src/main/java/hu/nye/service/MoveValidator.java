@@ -18,7 +18,7 @@ public class MoveValidator {
      */
     protected boolean checkDirection(final Board board, final char symbol, final int dx, final int dy) {
         if (dx == 0 && dy == 0) {
-            return false; // Érvénytelen irány esetén azonnal térj vissza false értékkel
+            return false;
         }
 
         int rows = board.getRows();
@@ -51,7 +51,6 @@ public class MoveValidator {
         int rows = board.getRows();
         int cols = board.getCols();
 
-        // Check if the starting point can accommodate 4 slots in the specified direction
         return row + 3 * dx >= 0 && row + 3 * dx < rows &&
                 col + 3 * dy >= 0 && col + 3 * dy < cols;
     }
@@ -87,10 +86,10 @@ public class MoveValidator {
         int rows = board.getRows();
         for (int row = 0; row < rows; row++) {
             if (board.getSlot(row, col) == board.getEmptySlot()) {
-                return false; // The column is not full if there's an empty slot
+                return false;
             }
         }
-        return true; // The column is full if no empty slots are found
+        return true;
     }
 
 }
