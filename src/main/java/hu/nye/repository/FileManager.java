@@ -32,7 +32,7 @@ public class FileManager {
                 return;
             }
 
-            board.initializeEmptyBoard(); // Initialize board to empty state
+            board.initializeEmptyBoard(); 
             boolean hasData = false;
 
             for (int i = 0; i < board.getRows(); i++) {
@@ -62,7 +62,6 @@ public class FileManager {
                 writer.write(row);
                 writer.newLine();
             }
-            // Ellenőrizzük, hogy már tartalmazza-e a játék vége jelet
             if (!isFileEndingWith(filePath, "====")) {
                 writer.write("====\n");
             }
