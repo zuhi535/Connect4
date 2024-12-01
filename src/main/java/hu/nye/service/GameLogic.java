@@ -25,7 +25,7 @@ public class GameLogic {
                 return true;
             }
         }
-        return false; // Column is full
+        return false;
     }
 
     /**
@@ -58,8 +58,6 @@ public class GameLogic {
         }
         return true;
     }
-
-    // ----- Private Helper Methods -----
 
     private boolean checkHorizontal(final Board board, final char player) {
         for (int row = 0; row < board.getRows(); row++) {
