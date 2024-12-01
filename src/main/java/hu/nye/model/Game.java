@@ -133,7 +133,7 @@ public final class Game {
 
         boolean isPlayerTurn = true;
 
-        while (!gameLogic.isFull(gameBoard)) {  // Change here
+        while (!gameLogic.isFull(gameBoard)) {
             if (isPlayerTurn) {
                 playerTurn();
             } else {
@@ -179,13 +179,11 @@ public final class Game {
         int col;
         boolean validMove = false;
 
-        // Loop until a valid move is made
         while (!validMove) {
             col = inputHandler.getPlayerMove(gameBoard.getCols() - 1);
 
-            // Check if the move is valid (column is not full)
             if (gameLogic.makeMove(gameBoard, col, humanPlayer.symbol())) {
-                validMove = true;  // Valid move made
+                validMove = true;
             } else {
 
                 System.out.println("This column is full. "
