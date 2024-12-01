@@ -7,9 +7,6 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-/**
- * Unit tests for the GameLogic class.
- */
 class GameLogicTest {
 
     private GameLogic gameLogic;
@@ -18,7 +15,7 @@ class GameLogicTest {
     @BeforeEach
     void setUp() {
         gameLogic = new GameLogic();
-        board = mock(Board.class); // Mocking the Board to simplify behavior
+        board = mock(Board.class); 
     }
 
     // Ellenőrzi, hogy a hely (slot) frissítve lett
@@ -52,7 +49,6 @@ class GameLogicTest {
         when(board.getRows()).thenReturn(6);
         when(board.getEmptySlot()).thenReturn(' ');
 
-        // Simulate a full column
         for (int row = 0; row < 6; row++) {
             when(board.getSlot(row, 0)).thenReturn('R');
         }
