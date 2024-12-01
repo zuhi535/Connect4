@@ -11,7 +11,6 @@ import hu.nye.util.ColorUtils;
  * Érvényesítse és jelenítse meg a játéktáblát.
  */
 public class Board {
-    // ----- Fields -----
     /** A játéktáblát jelképező 2D tömb. */
     private final char[][] board;
 
@@ -30,7 +29,6 @@ public class Board {
     /** A tábla oszlopainak alapértelmezett számára vonatkozó állandó. */
     private static final int DEFAULT_COLUMNS = 7;
 
-    // ----- Constructors -----
     /**
      * Alapértelmezett konstruktor, amely inicializálja a táblát
      * alapértelmezett méretek (6 sor és 7 oszlop).
@@ -54,8 +52,6 @@ public class Board {
         initializeEmptyBoard();
     }
 
-
-    // ----- Initialization and Reset -----
     /**
      * Inicializálja a táblát üres helyekkel ("-") minden pozícióhoz.
      * Ezt a módszert hívják meg az építés során
