@@ -42,7 +42,7 @@ public class GameInitializer {
     public Game initializeGame(final String playerName) {
         Player player = new Player(playerName, 'R');
         Board board = new Board();
-        board.reset(); // Tábla alaphelyzetbe állítása
+        board.reset();
 
         FileManager fileManager = new FileManager();
         try {
