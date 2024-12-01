@@ -68,7 +68,9 @@ public class FileManager {
         }
     }
 
-    // Helper metódus a fájl végét ellenőrizni
+    /**
+     * Helper metódus a fájl végét ellenőrizni
+     */
     boolean isFileEndingWith(final String filePath, final String ending) throws IOException {
         try (RandomAccessFile file = new RandomAccessFile(filePath, "r")) {
             long length = file.length();
