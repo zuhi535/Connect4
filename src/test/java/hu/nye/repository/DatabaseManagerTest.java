@@ -75,7 +75,7 @@ class DatabaseManagerTest {
         DatabaseManager localDatabaseManager = new DatabaseManager() {
             @Override
             public Connection getConnection() {
-                return null; // Simulate failed connection
+                return null; 
             }
         };
 
