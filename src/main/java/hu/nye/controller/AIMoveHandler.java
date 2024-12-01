@@ -14,7 +14,6 @@ import hu.nye.service.MoveValidator;
  */
 public class AIMoveHandler {
 
-    // ----- Fields -----
     /** A mozgásérvényesítő az oszlop jogszerűségének ellenőrzéséhez. */
     private final MoveValidator moveValidator;
 
@@ -23,8 +22,7 @@ public class AIMoveHandler {
 
     /** Az AI lépéséhez használt játéklogika. */
     private final GameLogic gameLogic;
-
-    // ----- Constructor -----
+    
     /**
      * AIMoveHandlert hoz létre
      * az adott MoveValidatorral,
@@ -42,7 +40,6 @@ public class AIMoveHandler {
         this.gameLogic = gameLogicParam;
     }
 
-    // ----- AI Move Logic -----
     /**
      * Mozgást tesz az AI lejátszónak az adott táblán.
      * Az AI véletlenszerűen kiválaszt egy érvényes oszlopot, amely
