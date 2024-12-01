@@ -4,168 +4,263 @@ import java.io.IOException;
 import java.util.Random;
 import java.util.Scanner;
 
+import hu.nye.controller.InputHandler;
+import hu.nye.repository.DatabaseManager;
+import hu.nye.repository.FileManager;
+import hu.nye.service.GameLogic;
+import hu.nye.service.MoveValidator;
+
 /**
- * Represents the game logic for a connect-four style game.
- * Handles player and computer turns,
- * checks for a winner, and saves or loads the game state.
+ * A fő osztály, amely a Connect 4 játékot képviseli.
+ * Kezeli a játék folyamatát, a játékosokat, a tábla állapotát és az interakciókat
+ * például mentés, betöltés és magas pontszámok megtekintése.
  */
 public final class Game {
 
-    /** The number of columns in the game board. */
-    private static final int BOARD_COLUMNS = 7;
-
-    /** The maximum column index allowed for moves. */
-    private static final int COLUMN_RANGE = 6;
-
-    /** The game board where moves are made. */
+    // ----- Fields -----
+    /** A játéktábla, ahol a játékot játsszák. */
     private final Board gameBoard;
 
-    /** The human player participating in the game. */
+    /** Az emberi játékos. */
     private final Player humanPlayer;
 
-    /** The computer opponent in the game. */
+    /** A számítógépes lejátszó. */
     private final Player computerPlayer;
 
-    /** Scanner to read player input from the console. */
-    private final Scanner inputScanner;
+    /** A felhasználói bevitel kezelője. */
+    private final InputHandler inputHandler;
 
-    /** Random number generator to decide the computer's moves. */
-    private final Random randomGenerator;
+    /** A fájlkezelő a játék állapotának mentéséhez/betöltéséhez. */
+    private final FileManager fileManager;
 
-    /**
-     * Constructs a new Game object.
-     *
-     * @param player the player of the game
-     * @param board the game board
-     * @param scanner a scanner for reading input
-     * @param random a random number generator for computer moves
-     */
-    public Game(final Player player, final Board board,
-                final Scanner scanner, final Random random) {
-        // Assigning the parameters to the instance fields
-        this.gameBoard = board;
-        this.humanPlayer = player;
-        this.computerPlayer = new Player("Computer", 'Y');
-        this.inputScanner = scanner;
-        this.randomGenerator = random;
+    /** A számítógép mozgatásához használt véletlenszám-generátor. */
+    private final Random random;
+
+    /** Az adatbázis-kezelő a magas pontszámok kezelésére. */
+    private final DatabaseManager databaseManager;
+
+    /** A játék logikája a játék folyamatának kezeléséhez. */
+    private final GameLogic gameLogic;
+
+    public Player getHumanPlayer() {
+        return humanPlayer;
     }
 
     /**
-     * Starts the game, alternating between player
-     * and computer turns until the board is full
-     * or there is a winner.
+     * Új játékpéldányt hoz létre a megadott játékosokkal,
+     * játéktábla és játékelemek.
+     *
+     * @param player A játékhoz hozzáadandó emberi játékos.
+     * @param board A játéktábla, ahol a játékot játszani fogják.
+     * @param inputHandlerParam A felhasználói bevitel kezelésére szolgáló kezelő.
+     * @param moveValidator A játékos lépéseinek érvényesítésére szolgáló szolgáltatás (itt közvetlenül nem használatos).
+     * @param fileManagerParam A játékadatok mentéséért és betöltéséért felelős kezelő.
+     * @param randomParam A számítógép mozgatásához használt véletlenszám-generátor.
+     * @param databaseManagerParam A magas pontszámú adatbázissal való interakcióért felelős vezető.
+     */
+    public Game(final Player player,
+                final Board board,
+                final InputHandler inputHandlerParam,
+                final MoveValidator moveValidator,
+                final FileManager fileManagerParam,
+                final Random randomParam,
+                final DatabaseManager databaseManagerParam) {
+        this.gameBoard = board;
+        this.humanPlayer = new Player(player.name(), 'Y');
+        this.computerPlayer = new Player("Computer", 'R');
+        this.inputHandler = inputHandlerParam;
+        this.fileManager = fileManagerParam;
+        this.random = randomParam;
+        this.databaseManager = databaseManagerParam;
+        this.gameLogic = new GameLogic();
+    }
+
+    /**
+     * Elindítja a játékot és kezeli a fő játékhurkot.
+     * Ez a módszer kéri a felhasználótól a bevitelt és
+     * elindítja a játék folyamatát.
      */
     public void start() {
+        Scanner scanner = new Scanner(System.in);
+        boolean running = true;
+
+        while (running) {
+            showMenu();
+            int choice = scanner.nextInt();
+
+
+            switch (choice) {
+                case 1 -> {
+                    resetGame();
+                    playGame();
+                }
+                case 2 -> viewHighScores();
+                case 3 -> {
+                    running = false;
+                    System.out.println("Exiting the game. Goodbye!");
+                }
+                default -> System.out.println("Invalid choice. "
+                        + "Please try again.");
+            }
+        }
+        scanner.close();
+    }
+
+    /**
+     * Megjeleníti a főmenü opcióit a felhasználó számára.
+     */
+    private void showMenu() {
+        System.out.println("Welcome to Connect 4!");
+        System.out.println("1. Start Game");
+        System.out.println("2. View High Scores");
+        System.out.println("3. Exit");
+        System.out.print("Enter your choice: ");
+    }
+
+    /**
+     * Szabályozza a játék áramlását, váltakozva
+     * Fordulatok az emberi játékos között
+     * és a számítógépes lejátszó. A játék addig folytatódik, amíg
+     * A tábla megtelt, vagy egy játékos nyer.
+     * Minden lépés után a tábla frissül és
+     * ellenőrizte a győzelmet. Ha az emberi játékos nyer,
+     * Nyereményük rögzítésre kerül az adatbázisban, és a játék mentésre kerül.
+     * Ha a játék döntetlennel ér véget, megjelenik egy üzenet.
+     */
+    void playGame() {
+        gameBoard.display();
+        System.out.println();
+
         boolean isPlayerTurn = true;
 
-        while (!gameBoard.isFull()) {
+        while (!gameLogic.isFull(gameBoard)) {  // Change here
             if (isPlayerTurn) {
                 playerTurn();
             } else {
                 computerTurn();
             }
 
-            // Check for a winner after the move
-            if (gameBoard.checkWin(isPlayerTurn ? humanPlayer.symbol()
-                    : computerPlayer.symbol())) {
+            char currentSymbol = isPlayerTurn ? humanPlayer.symbol()
+                    : computerPlayer.symbol();
+
+            if (gameLogic.checkWin(gameBoard, currentSymbol)) {
                 gameBoard.display();
                 System.out.println((isPlayerTurn ? humanPlayer.name()
-                        : "Computer") + (isPlayerTurn ? ", you won!"
-                        : " wins! Better luck next time."));
-                saveFinalGame();
+                        : "Computer") + " wins!");
+
+                if (isPlayerTurn && databaseManager != null) {
+                    databaseManager.addWin(humanPlayer.name());
+                }
+                saveGame();
                 return;
             }
 
-            isPlayerTurn = !isPlayerTurn;  // Switch turns
-            gameBoard.display();  // Display board after each move
+            gameBoard.display();
+            System.out.println();
+
+            isPlayerTurn = !isPlayerTurn;
         }
 
         System.out.println("The game is a draw!");
-        saveFinalGame();
-    }
+        saveGame();
 
-    /**
-     * Handles the player's turn by prompting
-     * them to select a column to make a move.
-     * If the column is full, it retries until a valid move is made.
-     */
-    private void playerTurn() {
-        int col = getPlayerMove();  // Input validation happens in getPlayerMove
-        if (gameBoard.makeMove(col, humanPlayer.symbol())) {
-            System.out.println("Column is full, try another one.");
-            playerTurn();  // Retry if the column is full
+        if (databaseManager != null) {
+            System.out.println("Final Scores:");
+            databaseManager.displayHighScores();
         }
     }
 
     /**
-     * Handles the computer's turn
-     * by randomly selecting a column to make a move.
-     * If the selected column is full, it retries until a valid move is made.
+     * Kezeli az emberi játékos fordulatát.
+     * Folyamatosan kéri a játékost egy
+     * érvényes lépés, amíg meg nem történik.
      */
-    private void computerTurn() {
-        System.out.println("Computer's turn.");
+    void playerTurn() {
         int col;
-        do {
-            col = randomGenerator.nextInt(BOARD_COLUMNS);
-        } while (gameBoard.makeMove(col, computerPlayer.symbol()));
-    }
+        boolean validMove = false;
 
-    /**
-     * Prompts the player to enter a valid column number for their move.
-     *
-     * @return the column number selected by the player
-     */
-    private int getPlayerMove() {
-        int col = -1;
-        boolean validInput = false;
+        // Loop until a valid move is made
+        while (!validMove) {
+            col = inputHandler.getPlayerMove(gameBoard.getCols() - 1);
 
-        while (!validInput) {
-            try {
-                System.out.print("Enter column (0-" + COLUMN_RANGE + ") "
-                        + "to make your move: ");
-                col = inputScanner.nextInt();  // Reading input from the player
-                if (col < 0 || col > COLUMN_RANGE) {
-                    System.out.println("Invalid column. Please enter "
-                            + "a number between 0 and " + COLUMN_RANGE + ".");
-                } else {
-                    validInput = true;  // Valid column, exit loop
-                }
-            } catch (Exception e) {
-                System.out.println("Invalid input. Please enter a "
-                        + "valid number between 0 and " + COLUMN_RANGE + ".");
-                inputScanner.next();  // Clear the invalid input
+            // Check if the move is valid (column is not full)
+            if (gameLogic.makeMove(gameBoard, col, humanPlayer.symbol())) {
+                validMove = true;  // Valid move made
+            } else {
+
+                System.out.println("This column is full. "
+                        + "Please choose another column.");
             }
         }
-
-        return col;
     }
 
     /**
-     * Saves the final game state to a file named 'saved_game.txt'.
-     * Notifies the user if the save was successful or if it failed.
+     * Kezeli a számítógépes lejátszó kikapcsolását.
+     * Folyamatosan kéri a játékost egy érvényes lépésre, amíg meg nem történik.
      */
-    public void saveFinalGame() {
+    void computerTurn() {
+        int col;
+        do {
+            col = random.nextInt(gameBoard.getCols());
+        } while (!gameLogic.makeMove(gameBoard, col, computerPlayer.symbol()));
+    }
+
+    /**
+     * Fájlba menti a játéktábla aktuális állapotát.
+     * A játék állapota "saved_game.txt" formátumban kerül mentésre.
+     */
+    void saveGame() {
         try {
-            gameBoard.saveFinalGame("saved_game.txt");
-            System.out.println("Game result saved to 'saved_game.txt'.");
+            fileManager.saveBoard(gameBoard, "saved_game.txt");
         } catch (IOException e) {
-            System.out.println("Failed to save game result: " + e.getMessage());
+            System.out.println("Failed to save game: " + e.getMessage());
         }
     }
 
     /**
-     * Loads the initial board state from a file named 'board_input.txt'.
-     * Displays the loaded board if successful
-     * or starts with a default board if not.
+     * Visszaállítja a játéktáblát és megpróbálja
+     * egy korábbi táblaállapot betöltése fájlból.
+     * Ha nem található korábbi állapot, üres táblával kezdődik.
      */
-    public void loadInitialBoard() {
+    public void resetGame() {
+        gameBoard.reset();
         try {
-            gameBoard.loadInitialBoard("board_input.txt");
-            System.out.println("Loaded initial board from 'board_input.txt'.");
-            gameBoard.display();  // Display the loaded board
+            fileManager.loadBoard(gameBoard, "board_input.txt");
+            System.out.println("Board loaded from board_input.txt");
         } catch (IOException e) {
-            System.out.println("No initial board found. "
-                    + "Starting with default empty board.");
+            System.out.println("Starting with an empty board.");
+        }
+        System.out.println("Game has been reset. "
+                + "You can now start a new game.");
+    }
+
+    /**
+     * Megjeleníti az adatbázis legmagasabb pontszámait.
+     * Ha nincsenek magas pontszámok, tájékoztatja a felhasználót.
+     */
+    void viewHighScores() {
+        if (databaseManager != null) {
+            System.out.println("High Scores:");
+            databaseManager.displayHighScores();
+        } else {
+            System.out.println("No high scores available.");
+        }
+
+        System.out.println("Press Enter to return to the menu.");
+        try {
+            System.in.read();
+        } catch (IOException e) {
+            System.err.println("Error reading input: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Bezárja az adatbázis-kapcsolatot
+     * ha az adatbázis-kezelő inicializálva van.
+     */
+    public void closeDatabase() {
+        if (databaseManager != null) {
+            databaseManager.close();
         }
     }
 }

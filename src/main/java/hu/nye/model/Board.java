@@ -1,251 +1,232 @@
 package hu.nye.model;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.Arrays;
+import hu.nye.util.ColorUtils;
 
 /**
- * Represents a Connect Four game board.
+ * A játéktáblát képviseli és biztosítja
+ * funkció az állapotának kezelésére.
+ * A tábla sorok és oszlopok rácsa,
+ * ahol a játékosok elhelyezhetik darabjaikat.
+ * Tartalmazza az inicializálás, módosítás,
+ * Érvényesítse és jelenítse meg a játéktáblát.
  */
-public final class Board {
-    /** The number of rows on the game board. */
-    private static final int ROWS = 6;
-
-    /** The number of columns on the game board. */
-    private static final int COLS = 7;
-
-    /** The number of consecutive pieces required to win. */
-    private static final int WIN_SEQUENCE = 4;
-
-    /** The symbol representing an empty slot on the board. */
-    private static final char EMPTY_SLOT = '-';
-
-    /** The 2D array representing the game board. */
+public class Board {
+    // ----- Fields -----
+    /** A játéktáblát jelképező 2D tömb. */
     private final char[][] board;
 
+    /** A tábla sorainak száma. */
+    private final int rows;
+
+    /** A tábla oszlopainak száma. */
+    private final int columns;
+
+    /** A táblán lévő üres helyet jelölő karakter. */
+    private final char emptySlot = '-';
+
+    /** A tábla sorainak alapértelmezett számában lévő állandó. */
+    private static final int DEFAULT_ROWS = 6;
+
+    /** A tábla oszlopainak alapértelmezett számára vonatkozó állandó. */
+    private static final int DEFAULT_COLUMNS = 7;
+
+    // ----- Constructors -----
     /**
-     * Initializes an empty board.
+     * Alapértelmezett konstruktor, amely inicializálja a táblát
+     * alapértelmezett méretek (6 sor és 7 oszlop).
+     * A tábla inicializálása üres helyekkel történik.
      */
     public Board() {
-        board = new char[ROWS][COLS];
-        for (char[] row : board) {
-            Arrays.fill(row, EMPTY_SLOT);
-        }
+        this(DEFAULT_ROWS, DEFAULT_COLUMNS);
     }
 
     /**
-     * Loads the initial board from a file.
+     * Paraméterezett konstruktor az inicializáláshoz
+     * A tábla egyéni sorokkal és oszlopokkal.
      *
-     * @param filePath the path to the file containing the initial board state
-     * @throws IOException if an I/O error occurs
+     * @param numColumns A tábla sorainak száma.
+     * @param numRows A tábla oszlopainak száma.
      */
-    public void loadInitialBoard(final String filePath) throws IOException {
-        try (InputStream inputStream = getClass()
-                .getClassLoader()
-                .getResourceAsStream(filePath);
-             BufferedReader reader = (inputStream != null)
-                     ? new BufferedReader(new InputStreamReader(inputStream))
-                     : null) {
+    public Board(final int numRows, final int numColumns) {
+        this.rows = numRows;
+        this.columns = numColumns;
+        this.board = new char[numRows][numColumns];
+        initializeEmptyBoard();
+    }
 
-            if (reader == null) {
-                System.out.println("No initial board file found. "
-                        + "Starting with an empty board.");
-                // Initialize the board with empty cells
-                for (int row = 0; row < ROWS; row++) {
-                    Arrays.fill(board[row], '-'); // Use '-' for empty cells
-                }
-                return;
-            }
 
-            for (int i = 0; i < ROWS; i++) {
-                String line = reader.readLine();
-                if (line != null) {
-                    line = line.trim();  // Remove any extra whitespace
-                    if (line.length() == COLS) {
-                        board[i] = line.toCharArray();
-                    } else {
-                        System.out.println("Invalid row length at line "
-                                + (i + 1) + ". Expected " + COLS
-                                + " characters, but found " + line.length());
-                    }
-                } else {
-                    // If line is null, fill the
-                    // rest of the board with empty cells
-                    Arrays.fill(board[i], '-');
-                }
+    // ----- Initialization and Reset -----
+    /**
+     * Inicializálja a táblát üres helyekkel ("-") minden pozícióhoz.
+     * Ezt a módszert hívják meg az építés során
+     * a táblán és a tábla visszaállításakor is.
+     */
+    public void initializeEmptyBoard() {
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < columns; j++) {
+                board[i][j] = emptySlot;
             }
         }
     }
 
     /**
-     * Saves the final state of the game to a file.
+     * Visszaállítja a táblát a kezdeti üres állapotába a hívással
+     * az initializeEmptyBoard metódus.
+     */
+    public void reset() {
+        initializeEmptyBoard();
+    }
+
+    /**
+     * A teljes táblát 2D tömbként adja vissza.
      *
-     * @param filePath the file path where the board will be saved
-     * @throws IOException if an I/O error occurs
+     * @return A tábla aktuális állapotát ábrázoló 2D karaktertömb.
      */
-    public void saveFinalGame(final String filePath)
-            throws IOException {
-        try (BufferedWriter writer =
-                     new BufferedWriter(new FileWriter(filePath, true))) {
-            for (int i = 0; i < ROWS; i++) {
-                writer.write(new String(board[i]));
-                writer.newLine();
-            }
-            // Indicates the end of a game
-            writer.write("====\n");
-        }
+    public char[][] getBoard() {
+        return board;
     }
 
     /**
-     * Makes a move in the specified column for the given player.
+     * Egy adott slot értékét kapja a táblán.
      *
-     * @param col the column to place the piece
-     * @param playerSymbol the symbol representing the player
-     * @return true if the move fails (column is full), false otherwise
+     * @param row A nyílás sorindexe.
+     * @param col A nyílás oszlopindexe.
+     * @return A megadott nyílás értéke (karaktere).
+     * @throws IllegalArgumentException Ha a sor- vagy oszlopindex érvénytelen.
      */
-    public boolean makeMove(final int col, final char playerSymbol) {
-        for (int i = ROWS - 1; i >= 0; i--) {
-            if (board[i][col] == EMPTY_SLOT) {
-                board[i][col] = playerSymbol;
-                return false;
-            }
-        }
-        return true;  // If the column is full
+    public char getSlot(final int row, final int col) {
+        validateIndices(row, col);
+        return board[row][col];
     }
 
     /**
-     * Checks if the board is full.
+     * Beállítja egy adott nyílás értékét a táblán.
      *
-     * @return true if the board is full, false otherwise
+     * @param row A nyílás sorindexe.
+     * @param col A nyílás oszlopindexe.
+     * @param value A nyílásban beállítandó érték (karakter).
+     * @throws IllegalArgumentException Ha a sor- vagy oszlopindex érvénytelen.
      */
-    public boolean isFull() {
-        for (int i = 0; i < COLS; i++) {
-            if (board[0][i] == EMPTY_SLOT) {
-                return false;
-            }
-        }
-        return true;
+    public void setSlot(final int row, final int col, final char value) {
+        validateIndices(row, col);
+        board[row][col] = value;
     }
 
     /**
-     * Displays the current state of the board.
+     * A tábla teljes sorát lekéri a megadott sorindexen.
+     *
+     * @param rowIndex A lekérni kívánt sor indexe.
+     * @return A sort jelölő karakteres tömb.
+     * @throws IllegalArgumentException Ha a sorindex érvénytelen.
+     */
+    public char[] getRow(final int rowIndex) {
+        if (rowIndex < 0 || rowIndex >= rows) {
+            throw new IllegalArgumentException("Invalid row index");
+        }
+        return board[rowIndex];
+    }
+
+    /**
+     * A tábla teljes sorát a megadott értékre állítja
+     * Sorindex a megadott adatokkal.
+     *
+     * @param rowIndex A frissítendő sor indexe.
+     * @param rowData A beállítandó új soradatok.
+     * @throws IllegalArgumentException Ha a sorindex
+     */
+    public void setRow(final int rowIndex, final char[] rowData) {
+        if (rowIndex < 0 || rowIndex >= rows || rowData.length != columns) {
+            throw new IllegalArgumentException("Invalid row "
+                    + "index or row data length");
+        }
+        board[rowIndex] = rowData;
+    }
+
+    /**
+     * A tábla sorainak számát adja eredményül.
+     *
+     * @return A sorok száma.
+     */
+    public int getRows() {
+        return rows;
+    }
+
+    /**
+     * A tábla oszlopainak számát adja eredményül.
+     *
+     * @return Az oszlopok száma.
+     */
+    public int getCols() {
+        return columns;
+    }
+
+    /**
+     * A tábla üres helyét jelölő karaktert adja eredményül.
+     *
+     * @return Üres helyet jelölő karakter ("-").
+     */
+    public char getEmptySlot() {
+        return emptySlot;
+    }
+
+    /**
+     * Érvényesíti a sor- és oszlopindexeket
+     * Győződjön meg arról, hogy az érvényes tartományon belül vannak.
+     *
+     * @param row Az érvényesíteni kívánt sorindex.
+     * @param col Az érvényesíteni kívánt oszlopindex.
+     * @throws IllegalArgumentException Ha a sor vagy
+     */
+    private void validateIndices(final int row, final int col) {
+        if (row < 0 || row >= rows || col < 0 || col >= columns) {
+            throw new IllegalArgumentException("Invalid row or column index");
+        }
+    }
+
+    /**
+     * Megjeleníti a tábla aktuális állapotát a konzolon,
+     * ANSI escape kódok használata a színezéshez.
+     * A piros darabok piros, a sárga darabok sárga színűek,
+     * és az üres helyek alapértelmezett karakterekként kerülnek nyomtatásra.
      */
     public void display() {
-        System.out.println("Current board:");
-        for (int i = 0; i < ROWS; i++) {
-            for (int j = 0; j < COLS; j++) {
-                System.out.print(board[i][j] + " ");
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < columns; j++) {
+                if (board[i][j] == 'R') {
+                    System.out.print(ColorUtils.ANSI_RED + board[i][j]
+                            + ColorUtils.ANSI_RESET + " ");
+                } else if (board[i][j] == 'Y') {
+                    System.out.print(ColorUtils.ANSI_YELLOW + board[i][j]
+                            + ColorUtils.ANSI_RESET + " ");
+                } else {
+                    System.out.print(board[i][j] + " ");
+                }
             }
             System.out.println();
         }
+        printSeparatorLine();
+        printColumnNumbers();
     }
 
     /**
-     * Checks if the specified player has won the game.
-     *
-     * @param playerSymbol the symbol representing the player
-     * @return true if the player has won, false otherwise
+     * Kinyomtat egy elválasztó vonalat a tábla alatt, hogy vizuálisan látható legyen
+     * Válassza el a táblát az oszlopszámoktól.
      */
-    public boolean checkWin(final char playerSymbol) {
-        return checkHorizontalWin(playerSymbol)
-                || checkVerticalWin(playerSymbol)
-                || checkDiagonalWinAscending(playerSymbol)
-                || checkDiagonalWinDescending(playerSymbol);
-    }
-
-    private boolean checkHorizontalWin(final char playerSymbol) {
-        for (int row = 0; row < ROWS; row++) {
-            for (int col = 0; col <= COLS - WIN_SEQUENCE; col++) {
-                if (checkWinningSequence(row, col, playerSymbol, 0, 1)) {
-                    return true;
-                }
-            }
+    private void printSeparatorLine() {
+        for (int j = 0; j < columns; j++) {
+            System.out.print("--");
         }
-        return false;
-    }
-
-    private boolean checkVerticalWin(final char playerSymbol) {
-        for (int row = 0; row <= ROWS - WIN_SEQUENCE; row++) {
-            for (int col = 0; col < COLS; col++) {
-                if (checkWinningSequence(row, col, playerSymbol, 1, 0)) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    private boolean checkDiagonalWinDescending(final char playerSymbol) {
-        for (int row = 0; row <= ROWS - WIN_SEQUENCE; row++) {
-            for (int col = 0; col <= COLS - WIN_SEQUENCE; col++) {
-                if (checkWinningSequence(row, col, playerSymbol, 1, 1)) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    private boolean checkDiagonalWinAscending(final char playerSymbol) {
-        for (int row = WIN_SEQUENCE - 1; row < ROWS; row++) {
-            for (int col = 0; col <= COLS - WIN_SEQUENCE; col++) {
-                if (checkWinningSequence(row, col, playerSymbol, -1, 1)) {
-                    return true;
-                }
-            }
-        }
-        return false;
+        System.out.println();
     }
 
     /**
-     * Checks for a winning sequence in the specified direction.
-     *
-     * @param startRow The starting row of the sequence.
-     * @param startCol The starting column of the sequence.
-     * @param playerSymbol The symbol of the player.
-     * @param rowIncrement The increment for the row.
-     * @param colIncrement The increment for the column.
-     * @return true if a winning sequence is found, false otherwise.
+     * Kinyomtatja a tábla alatti oszlopszámokat a következők jelzésére:
+     * azok a pozíciók, ahol a játékosok elhelyezhetik bábuikat.
      */
-    private boolean checkWinningSequence(final int startRow, final int startCol,
-                                         final char playerSymbol,
-                                         final int rowIncrement,
-                                         final int colIncrement) {
-        for (int i = 0; i < WIN_SEQUENCE; i++) {
-            int currentRow = startRow + (i * rowIncrement);
-            int currentCol = startCol + (i * colIncrement);
-            if (board[currentRow][currentCol] != playerSymbol) {
-                return false;
-            }
+    private void printColumnNumbers() {
+        for (int j = 0; j < columns; j++) {
+            System.out.print(j + " ");
         }
-        return true;
-    }
-
-    /**
-     * Returns the current state of the board for testing.
-     *
-     * @return a 2D char array representing the board
-     */
-    public char[][] getBoard() {
-        return this.board;
-    }
-
-    /**
-     * Returns the current state of the board for a specific row.
-     *
-     * @param i The index of the row to return.
-     * @return a char array representing the row.
-     * @throws ArrayIndexOutOfBoundsException if the index is out of bounds.
-     */
-    public char[] getRow(final int i) {
-        if (i < 0 || i >= board.length) {
-            throw new ArrayIndexOutOfBoundsException("Index " + i + " out of"
-                    + " bounds for length " + board.length);
-        }
-        return board[i];
+        System.out.println();
     }
 }

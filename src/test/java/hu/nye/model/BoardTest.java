@@ -3,147 +3,149 @@ package hu.nye.model;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.io.File;
-import java.io.IOException;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 class BoardTest {
 
-    private Board board;
+    private Board defaultBoard;
+    private Board customBoard;
 
     @BeforeEach
     void setUp() {
-        board = new Board();
+        // Alapértelmezett táblát hozunk létre
+        defaultBoard = new Board();
+
+        // Egyedi méretű táblát hozunk létre
+        customBoard = new Board(8, 9);
     }
 
     @Test
-    void testInitialBoardEmpty() {
-        char[][] currentBoard = board.getBoard();
-        for (int row = 0; row < 6; row++) {
-            for (int col = 0; col < 7; col++) {
-                assertEquals('-', currentBoard[row][col], "Board should be empty initially.");
-            }
-        }
-    }
+    void testDefaultConstructor() {
+        assertEquals(6, defaultBoard.getRows());
+        assertEquals(7, defaultBoard.getCols());
 
-    @Test
-    void testMakeMoveValid() {
-        boolean result = board.makeMove(3, 'Y');
-        assertFalse(result, "Move should be valid when column is not full.");
-        assertEquals('Y', board.getBoard()[5][3], "Move should place 'Y' at the bottom row.");
-    }
-
-    @Test
-    void testMakeMoveFullColumn() {
-        // Fill the column
+        // Várható üres tábla létrehozása
+        char[][] expectedBoard = new char[6][7];
         for (int i = 0; i < 6; i++) {
-            assertFalse(board.makeMove(0, 'R'), "Move should be valid until the column is full.");
-        }
-        // Attempt to place another piece in the full column
-        boolean result = board.makeMove(0, 'Y');
-        assertTrue(result, "Move should fail when the column is full.");
-    }
-
-    @Test
-    void testIsFullInitially() {
-        assertFalse(board.isFull(), "Board should not be full initially.");
-    }
-
-    @Test
-    void testIsFullAfterFillingBoard() {
-        // Fill the entire board
-        for (int col = 0; col < 7; col++) {
-            for (int row = 0; row < 6; row++) {
-                assertFalse(board.makeMove(col, 'R'), "Move should be valid until the column is full.");
+            for (int j = 0; j < 7; j++) {
+                expectedBoard[i][j] = '-';
             }
         }
-        assertTrue(board.isFull(), "Board should be full after all positions are filled.");
+
+        // Ellenőrizzük, hogy az alapértelmezett tábla megfelelően lett inicializálva
+        assertArrayEquals(expectedBoard, defaultBoard.getBoard());
+    }
+
+
+    @Test
+    void testCustomConstructor() {
+        assertEquals(8, customBoard.getRows());
+        assertEquals(9, customBoard.getCols());
+
+        // Várható üres tábla létrehozása
+        char[][] expectedBoard = new char[8][9];
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 9; j++) {
+                expectedBoard[i][j] = '-';
+            }
+        }
+
+        // Ellenőrizzük, hogy az egyedi méretű tábla megfelelően lett inicializálva
+        assertArrayEquals(expectedBoard, customBoard.getBoard());
+    }
+
+
+    @Test
+    void testInitializeEmptyBoard() {
+        char[][] emptyBoard = new char[6][7];
+        for (int i = 0; i < emptyBoard.length; i++) {
+            for (int j = 0; j < emptyBoard[i].length; j++) {
+                emptyBoard[i][j] = '-';
+            }
+        }
+        defaultBoard.initializeEmptyBoard();
+
+        // Ellenőrizzük, hogy az initializeEmptyBoard metódus megfelelően inicializálja a táblát
+        assertArrayEquals(emptyBoard, defaultBoard.getBoard());
     }
 
     @Test
-    void testCheckWinHorizontal() {
-        // Place 4 'R' horizontally
-        board.makeMove(0, 'R');
-        board.makeMove(1, 'R');
-        board.makeMove(2, 'R');
-        board.makeMove(3, 'R');
-        assertTrue(board.checkWin('R'), "Player R should win with horizontal line.");
-    }
+    void testReset() {
+        defaultBoard.setSlot(0, 0, 'R');
+        defaultBoard.reset();
 
-    @Test
-    void testCheckWinVertical() {
-        // Place 4 'Y' vertically in column 2
-        board.makeMove(2, 'Y');
-        board.makeMove(2, 'Y');
-        board.makeMove(2, 'Y');
-        board.makeMove(2, 'Y');
-        assertTrue(board.checkWin('Y'), "Player Y should win with vertical line.");
-    }
-
-    @Test
-    void testCheckWinNoWin() {
-        // Place pieces without forming a winning sequence
-        board.makeMove(0, 'R');
-        board.makeMove(1, 'Y');
-        board.makeMove(2, 'R');
-        board.makeMove(3, 'Y');
-        board.makeMove(4, 'R');
-        board.makeMove(5, 'Y');
-        board.makeMove(6, 'R');
-        assertFalse(board.checkWin('R'), "Player R should not have a winning sequence.");
-        assertFalse(board.checkWin('Y'), "Player Y should not have a winning sequence.");
-    }
-
-    @Test
-    void testCheckWinOverlappingSequences() {
-        // Create multiple winning sequences for 'R'
-        board.makeMove(0, 'R');
-        board.makeMove(1, 'R');
-        board.makeMove(2, 'R');
-        board.makeMove(3, 'R'); // Horizontal win
-        board.makeMove(0, 'R');
-        board.makeMove(0, 'R');
-        board.makeMove(0, 'R'); // Vertical win
-        assertTrue(board.checkWin('R'), "Player R should have a winning sequence.");
-    }
-
-    @Test
-    void testMakeMoveInvalidColumn() {
-        Exception exception = assertThrows(ArrayIndexOutOfBoundsException.class, () -> {
-            board.makeMove(7, 'R');  // Invalid column
-        });
-        assertEquals("Index 7 out of bounds for length 7", exception.getMessage(), "Should throw exception for invalid column.");
-    }
-
-    @Test
-    void testMakeMoveNegativeColumn() {
-        Exception exception = assertThrows(ArrayIndexOutOfBoundsException.class, () -> {
-            board.makeMove(-1, 'Y');  // Invalid negative column
-        });
-        assertEquals("Index -1 out of bounds for length 7", exception.getMessage(), "Should throw exception for invalid negative column.");
-    }
-
-    @Test
-    void testSaveFinalGame() throws IOException {
-        board.makeMove(0, 'R');
-        String filePath = "saved_game.txt";
-        board.saveFinalGame(filePath);
-        File file = new File(filePath);
-        assertTrue(file.exists(), "File should be created.");
-        file.delete(); // Clean up after test
-    }
-
-    @Test
-    void testLoadInitialBoardNoFile() throws IOException {
-        board.loadInitialBoard("non_existent_file.txt");
-        // Expect the board to remain empty
-        char[][] loadedBoard = board.getBoard();
-        for (int row = 0; row < 6; row++) {
-            for (int col = 0; col < 7; col++) {
-                assertEquals('-', loadedBoard[row][col], "Board should remain empty when file is not found.");
+        // Ellenőrizzük, hogy a reset metódus után minden mező üres ( '-' )
+        for (int i = 0; i < defaultBoard.getRows(); i++) {
+            for (int j = 0; j < defaultBoard.getCols(); j++) {
+                assertEquals('-', defaultBoard.getSlot(i, j));
             }
         }
     }
 
+    @Test
+    void testSetAndGetSlot() {
+        defaultBoard.setSlot(2, 3, 'R');
+
+        // Ellenőrizzük, hogy a setSlot és getSlot metódusok megfelelően működnek
+        assertEquals('R', defaultBoard.getSlot(2, 3));
+    }
+
+    @Test
+    void testSetSlotInvalidIndices() {
+        // Ellenőrizzük, hogy érvénytelen indexek esetén kivétel dobódik
+        assertThrows(IllegalArgumentException.class, () -> defaultBoard.setSlot(-1, 0, 'R'));
+        assertThrows(IllegalArgumentException.class, () -> defaultBoard.setSlot(0, 10, 'R'));
+    }
+
+    @Test
+    void testGetSlotInvalidIndices() {
+        // Ellenőrizzük, hogy érvénytelen indexek esetén kivétel dobódik
+        assertThrows(IllegalArgumentException.class, () -> defaultBoard.getSlot(-1, 0));
+        assertThrows(IllegalArgumentException.class, () -> defaultBoard.getSlot(6, 7));
+    }
+
+    @Test
+    void testSetAndGetRow() {
+        char[] newRow = {'R', 'Y', '-', '-', '-', '-', '-'};
+        defaultBoard.setRow(0, newRow);
+
+        // Ellenőrizzük, hogy a setRow és getRow metódusok megfelelően működnek
+        assertArrayEquals(newRow, defaultBoard.getRow(0));
+    }
+
+    @Test
+    void testSetRowInvalidData() {
+        char[] invalidRow = {'R', 'Y'}; // Túl rövid sor
+        // Ellenőrizzük, hogy ha a sor hossza nem megfelelő, kivétel dobódik
+        assertThrows(IllegalArgumentException.class, () -> defaultBoard.setRow(0, invalidRow));
+    }
+
+    @Test
+    void testSetRowInvalidIndex() {
+        char[] newRow = {'R', 'Y', '-', '-', '-', '-', '-'};
+
+        // Ellenőrizzük, hogy ha az index érvénytelen, kivétel dobódik
+        assertThrows(IllegalArgumentException.class, () -> defaultBoard.setRow(-1, newRow));
+    }
+
+    @Test
+    void testGetEmptySlot() {
+        // Ellenőrizzük, hogy az üres mező karaktere megfelelően van beállítva
+        assertEquals('-', defaultBoard.getEmptySlot());
+    }
+
+    @Test
+    void testDisplay() {
+        // Ez a teszt az output validálását nem végzi, mivel az a konzolra ír.
+        // Tesztként lefuttatjuk a metódust, hogy biztosak legyünk, nem dob kivételt.
+        assertDoesNotThrow(() -> defaultBoard.display());
+    }
+
+    @Test
+    void testValidateIndices() {
+        assertDoesNotThrow(() -> defaultBoard.setSlot(0, 0, 'R'));
+
+        // Ellenőrizzük, hogy érvénytelen indexek esetén kivétel dobódik
+        assertThrows(IllegalArgumentException.class, () -> defaultBoard.setSlot(6, 7, 'R'));
+    }
 }

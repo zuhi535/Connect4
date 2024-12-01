@@ -1,49 +1,56 @@
 package hu.nye;
 
-import hu.nye.model.Game;
-import hu.nye.model.Player;
-import hu.nye.model.Board;
-
+import java.sql.Connection;
 import java.util.Random;
 import java.util.Scanner;
 
+import hu.nye.model.Game;
+import hu.nye.repository.DatabaseManager;
+import hu.nye.util.GameInitializer;
+
 /**
- * Main class for starting the Connect4 game.
+ * A Connect4 játékalkalmazás fő belépési pontja.
+ * Ez az osztály kezeli a játék inicializálását, elindítását,
+ * és a felhasználóval való interakció kezelését.
+ * Biztosítja továbbá, hogy az erőforrások, például az adatbázis-
+ * kapcsolat és a scanner, használat után megfelelően lezárásra kerüljenek.
  */
 public final class App {
 
     /**
-     * Private constructor to prevent instantiation.
-     */
-    private App() {
-        // This constructor is intentionally empty to prevent instantiation.
-    }
-
-    /**
-     * Main method for starting the Connect4 game.
+     * A Connect4 játékot futtató fő metódus.
+     * Inicializálja a játékot a felhasználói bemenet bekérésével,
+     * beállítja a játék paramétereit,
+     * és elindítja a játék ciklust. Kezeli továbbá az
+     * esetlegesen előforduló kivételeket a végrehajtás során.
      *
-     * @param args the command line arguments (not used)
+     * @param args Parancssori argumentumok, ebben az alkalmazásban nem használatosak.
      */
     public static void main(final String[] args) {
-        Scanner scanner = new Scanner(System.in);
-        Random random = new Random();  // Initialize Random object
 
-        System.out.println("Welcome to Connect4!");
-        System.out.print("Enter player name: ");
-        String playerName = scanner.nextLine();
+        try (Scanner scanner = new Scanner(System.in)) {
+            System.out.println("Welcome to Connect4!");
 
-        Player player = new Player(playerName, 'R');
+            System.out.print("Enter player name: ");
+            String playerName = scanner.nextLine();
 
-        // Create a new board object
-        Board board = new Board();
+            // Inicializálja a játékot a megfelelő paraméterekkel
+            Random random = new Random();
+            DatabaseManager databaseManager = new DatabaseManager() {
+                @Override
+                public Connection getConnection() {
+                    return null;
+                }
+            };
+            GameInitializer initializer = new GameInitializer(scanner, random, databaseManager);
+            Game game = initializer.initializeGame(playerName);
 
-        // Pass Scanner and Random to the Game object
-        Game game = new Game(player, board, scanner, random);
+            game.start();
 
-        // Load the initial board state from 'board_input.txt'
-        game.loadInitialBoard();
-
-        // Start the game
-        game.start();
+            game.closeDatabase();
+        } catch (Exception e) {
+            System.err.println("An error occurred: " + e.getMessage());
+        }
     }
+
 }

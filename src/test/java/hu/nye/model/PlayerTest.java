@@ -4,19 +4,37 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class PlayerTest {
 
+public class PlayerTest {
+
+    //ellenőrzi, hogy a Player osztály konstruktora megfelelően inicializálja a játékost a megadott névvel és szimbólummal.
     @Test
-    void testPlayerNameAndSymbol() {
-        Player player = new Player("Alice", 'X');
-        assertEquals("Alice", player.name(), "Player's name should be Alice.");
-        assertEquals('X', player.symbol(), "Player's symbol should be 'X'.");
+    public void testPlayerConstructor_shouldInitializeWithGivenNameAndSymbol() {
+        // Given
+        String expectedName = "Player1";
+        char expectedSymbol = 'Y';
+
+        // When
+        Player player = new Player(expectedName, expectedSymbol);
+
+        // Then
+        assertEquals(expectedName, player.name());
+        assertEquals(expectedSymbol, player.symbol());
     }
 
+    //metódusa helyesen adja vissza a játékos string reprezentációját.
     @Test
-    void testToString() {
-        Player player = new Player("Bob", 'O');
-        String expectedString = "Player{name='Bob', symbol=O}";
-        assertEquals(expectedString, player.toString(), "Player's string representation is incorrect.");
+    public void testToString_shouldReturnCorrectStringRepresentation() {
+        // Given
+        String expectedName = "Player1";
+        char expectedSymbol = 'X';
+        Player player = new Player(expectedName, expectedSymbol);
+
+        // When
+        String result = player.toString();
+
+        // Then
+        String expectedString = "Player{name='" + expectedName + "', symbol=" + expectedSymbol + "}";
+        assertEquals(expectedString, result);
     }
 }

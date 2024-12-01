@@ -1,18 +1,18 @@
 package hu.nye.model;
 
 /**
- * Represents a player in the Connect-4 game.
- * Each player has a name and a symbol that represents them on the game board.
+ * Egy játékost képvisel a Connect-4 játékban.
+ * Minden játékosnak van egy neve és egy szimbóluma, amely képviseli őket a játéktáblán.
  *
- * @param name   the name of the player
- * @param symbol the symbol representing the player on the board
+ * @param name a játékos nevét
+ * @param symbol a táblán lévő játékost jelképező szimbólum
  */
 public record Player(String name, char symbol) {
 
     /**
-     * Returns a string representation of the Player.
+     * A lejátszó karakterlánc-ábrázolását adja vissza.
      *
-     * @return a string containing the player's name and symbol
+     * @return egy karakterláncot, amely tartalmazza a játékos nevét és szimbólumát
      */
     @Override
     public String toString() {
