@@ -16,7 +16,6 @@ public abstract class DatabaseManager {
     /** Az SQLite szolgáltatással való interakcióhoz használt adatbázis-kapcsolati objektum. */
     private Connection connection;
 
-    // ----- Constructor -----
     /**
      * Adatbáziskezelőt hoz létre és
      * inicializálja a kapcsolatot az SQLite adatbázissal.
@@ -38,7 +37,6 @@ public abstract class DatabaseManager {
         }
     }
 
-    // ----- Database Initialization -----
     /** Az SQLite szolgáltatással való interakcióhoz használt adatbázis-kapcsolati objektum. */
     private void initializeDatabase() {
         String createTableSql = "CREATE TABLE IF NOT EXISTS high_scores ("
@@ -53,8 +51,6 @@ public abstract class DatabaseManager {
                     + "initialize database: " + e.getMessage());
         }
     }
-
-    // ----- Public Methods -----
 
     /**
      * Nyereményt ad az adott játékosnak.
@@ -116,8 +112,6 @@ public abstract class DatabaseManager {
                     + "database connection: " + e.getMessage());
         }
     }
-
-    // ----- Private Helper Methods -----
 
     /**
      * Ellenőrzi a játékos nevét, hogy megbizonyosodjon arról, hogy az megfelel a kívánt formátumnak.
