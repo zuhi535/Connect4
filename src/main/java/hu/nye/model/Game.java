@@ -17,7 +17,6 @@ import hu.nye.service.MoveValidator;
  */
 public final class Game {
 
-    // ----- Fields -----
     /** A játéktábla, ahol a játékot játsszák. */
     private final Board gameBoard;
 
