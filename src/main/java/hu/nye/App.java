@@ -34,7 +34,6 @@ public final class App {
             System.out.print("Enter player name: ");
             String playerName = scanner.nextLine();
 
-            // Inicializálja a játékot a megfelelő paraméterekkel
             Random random = new Random();
             DatabaseManager databaseManager = new DatabaseManager() {
                 @Override
