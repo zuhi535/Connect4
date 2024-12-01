@@ -15,7 +15,6 @@ public class MoveValidatorTest {
     @BeforeEach
     public void setUp() {
         moveValidator = new MoveValidator();
-        // Inicializáljuk a táblát 6 sorral és 7 oszloppal (például egy Connect4 játékhoz)
         board = new Board(6, 7);
     }
 
