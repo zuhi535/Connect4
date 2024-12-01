@@ -99,7 +99,7 @@ public class MoveValidatorTest {
         board.setSlot(0, 0, 'X');
         board.setSlot(0, 1, 'X');
         board.setSlot(0, 2, 'X');
-        board.setSlot(0, 4, 'X'); // Eltérés itt
+        board.setSlot(0, 4, 'X');
 
         boolean result = moveValidator.checkDirection(board, 'X', 0, 1);
 
