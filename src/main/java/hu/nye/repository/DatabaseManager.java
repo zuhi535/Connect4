@@ -142,7 +142,7 @@ public abstract class DatabaseManager {
                      = connection.prepareStatement(checkSql)) {
             checkStatement.setString(1, playerName);
             ResultSet rs = checkStatement.executeQuery();
-            return rs.next(); // True if a row is found, otherwise false
+            return rs.next();
         }
     }
 
